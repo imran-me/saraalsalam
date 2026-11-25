@@ -58,9 +58,11 @@
 
   // Behaviour / animation modules (guard each — they may not exist on a page).
   [
-    "initPreloader", "initNav", "initCursor", "initReveal",
+    "initPreloader", "initNav", "initCursor",
     "initCounters", "initBackground", "initProducts", "initFeatured",
     "initHeroDeck", "initMarketsMap", "initContact",
+    // Reveal LAST so it also observes the product cards rendered above.
+    "initReveal",
   ].forEach((fn) => { try { window[fn] && window[fn](); } catch (e) { console.error(fn, e); } });
 
   initSmoothScroll();
