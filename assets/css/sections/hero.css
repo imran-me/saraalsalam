@@ -85,3 +85,7 @@
   .hero { min-height: 92svh; }
   .hero-cta .btn { flex: 1 1 100%; }
 }
+
+/* Small screens: the "Trading in" pills wrap to several rows and reach the
+   bottom of the hero, so the scroll cue would sit on top of them. */
+@media (max-width: 560px) { .scroll-cue { display: none; } }

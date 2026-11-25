@@ -49,7 +49,14 @@ window.SASCloud = (function () {
   }
 
   const KEYS = (window.Store && window.Store.KEYS) || {};
-  const setLocal = (k, v) => { try { if (k) localStorage.setItem(k, JSON.stringify(v)); } catch (_) {} };
+  // Cache cloud data locally. If it is too big for localStorage, keep it in the
+  // shared in-memory layer (store.js reads it first) and drop any stale copy.
+  const setLocal = (k, v) => {
+    if (!k) return;
+    (window.__SAS_MEM = window.__SAS_MEM || {})[k] = v;
+    try { localStorage.setItem(k, JSON.stringify(v)); }
+    catch (_) { try { localStorage.removeItem(k); } catch (__) {} }
+  };
 
   /* ---- READ: cloud -> local cache ------------------------------------ */
   // Only overwrites a collection when the cloud actually has documents, so a

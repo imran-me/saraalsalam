@@ -51,13 +51,23 @@
   ].map((c, i) => ({ id: `co${i + 1}`, emblem: "", active: true, ...c }));
 
   /* ---- low-level helpers --------------------------------------------- */
+  // In-memory layer in front of localStorage: when a value is too big for the
+  // browser's ~5 MB localStorage quota (e.g. a large catalogue with embedded
+  // photos), it still lives in memory for this page view instead of being lost.
+  const MEM = (window.__SAS_MEM = window.__SAS_MEM || {});
   const read = (k, fallback) => {
+    if (Object.prototype.hasOwnProperty.call(MEM, k)) return MEM[k];
     try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : fallback; }
     catch (_) { return fallback; }
   };
   const write = (k, v) => {
+    MEM[k] = v;
     try { localStorage.setItem(k, JSON.stringify(v)); return true; }
-    catch (e) { console.error("[store] write failed", k, e); return false; }
+    catch (e) {
+      try { localStorage.removeItem(k); } catch (_) {}   // never leave a stale, smaller copy behind
+      console.warn("[store] kept in memory only (localStorage full)", k);
+      return true;
+    }
   };
   const uid = (prefix) => `${prefix}_${Date.now().toString(36)}_${Math.floor(Math.random() * 1e4)}`;
 

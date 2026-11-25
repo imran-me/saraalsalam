@@ -57,7 +57,8 @@ window.initProducts = function initProducts() {
       .map((o) => `<span class="chip">${esc(o)}</span>`).join("");
     const packs = (p.packaging || [])
       .map((pk) => `<span class="chip chip--pack">${esc(pk)}</span>`).join("");
-    const hs = p.hsCode ? `<p class="hs-line">HS Code: <b>${esc(p.hsCode)}</b></p>` : "";
+    const hsVal = String(p.hsCode || "").replace(/^\s*HS\s*Code\s*:?\s*/i, "");
+    const hs = hsVal ? `<p class="hs-line">HS Code: <b>${esc(hsVal)}</b></p>` : "";
     return `
     <article class="card product-card ${i % 2 ? "motif-b" : ""}" data-cat="${esc(p.category)}" data-slug="${esc(p.slug)}" data-reveal>
       <div class="media">
@@ -130,7 +131,7 @@ window.initProducts = function initProducts() {
             ${p.origins?.length ? `<div><strong>Origins</strong><div class="meta" style="margin-top:.4rem">${list(p.origins)}</div></div>` : ""}
             ${p.packaging?.length ? `<div><strong>Packaging</strong><div class="meta" style="margin-top:.4rem">${list(p.packaging)}</div></div>` : ""}
             ${p.moq ? `<p><strong>MOQ:</strong> ${esc(p.moq)}</p>` : ""}
-            ${p.hsCode ? `<p><strong>HS Code:</strong> ${esc(p.hsCode)}</p>` : ""}
+            ${p.hsCode ? `<p><strong>HS Code:</strong> ${esc(String(p.hsCode).replace(/^\s*HS\s*Code\s*:?\s*/i, ""))}</p>` : ""}
             ${specRows ? `<dl class="spec-list">${specRows}</dl>` : ""}
             <div class="modal-actions">
               <a class="btn btn--whatsapp" data-cta="whatsapp" data-product="${esc(p.name)}"

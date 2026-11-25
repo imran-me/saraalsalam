@@ -19,14 +19,19 @@
   // the latest published catalogue/settings from Firestore into that cache so
   // the renderers below show every visitor the newest admin edits.
   if (window.Store) window.Store.ready();
+
   if (window.SASCloud && window.SASCloud.enabled) {
     // Never let a slow/unreachable Firestore block the whole page: race the pull
     // against a short timeout and fall back to the local cache if it's not done.
+    // If that times out and there is NO cached catalogue yet (first visit, or the
+    // catalogue is too big for localStorage), keep waiting for the real data
+    // (max 20 s) — otherwise the product sections would render empty.
+    const pulling = window.SASCloud.pull();
+    const wait = (ms) => new Promise((resolve) => setTimeout(() => resolve("timeout"), ms));
     try {
-      await Promise.race([
-        window.SASCloud.pull(),
-        new Promise((resolve) => setTimeout(resolve, 4000)),
-      ]);
+      const won = await Promise.race([pulling.then(() => "pull"), wait(4000)]);
+      const hasCache = window.Store && window.Store.getProducts().length > 0;
+      if (won === "timeout" && !hasCache) await Promise.race([pulling, wait(20000)]);
     } catch (e) { console.error("[cloud] pull failed", e); }
   }
 
@@ -123,7 +128,11 @@ function applyContent() {
 function applyEmblem() {
   const c = window.SITE_CONFIG || {};
   if (!c.emblem) return;
-  const src = window.MEDIA ? window.MEDIA.resolveImg(c.emblem) : c.emblem;
+  // The default brand logo is a 3846px master; the header/footer use the
+  // identical 480px copy so every page doesn't download the huge file.
+  const emblem = /(^|\/)assets\/img\/brand\/logo\.png$/.test(c.emblem)
+    ? "assets/img/brand/logo-480.png" : c.emblem;
+  const src = window.MEDIA ? window.MEDIA.resolveImg(emblem) : emblem;
   // Header/footer brand mark + preloader emblem.
   document.querySelectorAll(".brand .mark, .preloader .emblem").forEach((img) => {
     img.src = src;
